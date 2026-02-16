@@ -52,10 +52,10 @@ jobs:
       -      name: Re-run tests
              if: steps.tests.outcome == 'failure'
              run: pytest
-  name: Commit updates
-    run: |
-         git config user.name github-actions
-          git config user.email actions@github.com
-          git add .
-          git commit -m "Auto update metrics / repair" || echo "No changes"
-          git push
+      - name: Commit metrics
+  run: |
+    git config user.name github-actions
+    git config user.email actions@github.com
+    git add .
+    git commit -m "Update metrics" || echo "No changes"
+    git push
