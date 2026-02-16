@@ -1,0 +1,22 @@
+name: schema-repair
+description: Fix ETL code when schema changes
+
+input:
+  error_log: string
+  code: string
+  data: string
+
+prompt: |
+  The ETL pipeline failed.
+
+  Error:
+  {{error_log}}
+
+  Code:
+  {{code}}
+
+  Data:
+  {{data}}
+
+  Modify the code so it supports both old and new schema safely.
+  Return only corrected Python code.
