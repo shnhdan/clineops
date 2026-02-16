@@ -1,6 +1,7 @@
 import time, json, shutil
-from fetch import fetch_data
-from transform import transform
+from clineops.etl.fetch import fetch_data
+from clineops.etl.transform import transform
+
 
 def run():
     start = time.time()

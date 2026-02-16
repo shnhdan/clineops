@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ClineOps Monitor</title>
+<style>
+body{font-family:sans-serif;text-align:center;margin-top:40px;background:#f8fafc}
+.card{display:inline-block;padding:30px;border-radius:12px;background:white;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+h1{margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<h1>ClineOps Self-Healing Pipeline</h1>
+
+<div class="card">
+<h2 id="status">Loading...</h2>
+<p>Runtime: <b id="runtime"></b> sec</p>
+<p>Last Run: <b id="time"></b></p>
+<p>Error: <b id="error"></b></p>
+</div>
+
+<script>
+fetch("metrics.json")
+.then(r=>r.json())
+.then(d=>{
+let s=document.getElementById("status")
+s.innerText=d.status
+s.style.color=d.status==="success"?"green":"red"
+document.getElementById("runtime").innerText=d.runtime_sec
+document.getElementById("time").innerText=new Date(d.timestamp*1000)
+document.getElementById("error").innerText=d.error ?? "None"
+})
+</script>
+
+</body>
+</html>
