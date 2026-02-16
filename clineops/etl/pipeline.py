@@ -1,7 +1,10 @@
-import time, json, shutil
+import time, json, shutil, os
 from clineops.etl.fetch import fetch_data
 from clineops.etl.transform import transform
 
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+METRICS_PATH = os.path.join(BASE_DIR, "etl", "metrics.json")
+DASHBOARD_PATH = os.path.join(BASE_DIR, "dashboard", "metrics.json")
 
 def run():
     start = time.time()
@@ -14,7 +17,6 @@ def run():
     except Exception as e:
         status = "failed"
         error_msg = str(e)
-        value = None
 
     metrics = {
         "status": status,
@@ -23,11 +25,13 @@ def run():
         "error": error_msg
     }
 
-    with open("etl/metrics.json","w") as f:
-        json.dump(metrics,f,indent=2)
+    os.makedirs(os.path.dirname(METRICS_PATH), exist_ok=True)
+    os.makedirs(os.path.dirname(DASHBOARD_PATH), exist_ok=True)
 
-    # copy for dashboard
-    shutil.copy("etl/metrics.json","dashboard/metrics.json")
+    with open(METRICS_PATH, "w") as f:
+        json.dump(metrics, f, indent=2)
+
+    shutil.copy(METRICS_PATH, DASHBOARD_PATH)
 
 if __name__ == "__main__":
     run()
