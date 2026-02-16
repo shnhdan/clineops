@@ -38,10 +38,10 @@ jobs:
           ERROR=$(cat .pytest_cache/v/cache/lastfailed || true)
           CODE=$(cat etl/transform.py)
           DATA=$(python - <<EOF
-from etl.fetch import fetch_data
-print(fetch_data())
-EOF
-)
+          from etl.fetch import fetch_data
+          print(fetch_data())
+          EOF
+           )
 
           cline run cline/repair.yaml \
             --error_log "$ERROR" \
