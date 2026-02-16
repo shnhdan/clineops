@@ -1,0 +1,62 @@
+name: ETL Pipeline
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - run: pip install -r requirements.txt
+
+      - name: Run Pipeline
+        id: run_pipeline
+        run: |
+          python etl/pipeline.py
+        continue-on-error: true
+
+      - name: Run Tests
+        id: test
+        run: pytest
+        continue-on-error: true
+
+      - name: If failed → run Cline repair
+        if: steps.test.outcome == 'failure'
+        run: |
+          echo "Running Cline repair..."
+
+          ERROR=$(cat .pytest_cache/v/cache/lastfailed || true)
+          CODE=$(cat etl/transform.py)
+          DATA=$(python - <<EOF
+from etl.fetch import fetch_data
+print(fetch_data())
+EOF
+)
+
+          cline run cline/repair.yaml \
+            --error_log "$ERROR" \
+            --code "$CODE" \
+            --data "$DATA" \
+            > etl/transform.py
+
+      - name: Re-run tests
+        run: pytest
+
+      - name: Commit fix
+        if: success()
+        run: |
+          git config user.name github-actions
+          git config user.email actions@github.com
+          git add .
+          git commit -m "Auto repair by Cline"
+          git push
