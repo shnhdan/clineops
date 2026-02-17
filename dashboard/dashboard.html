@@ -1,78 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>ClineOps Monitor</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
-
 body{
-background:linear-gradient(135deg,#0f172a,#1e293b);
+background:#0f172a;
 color:#e2e8f0;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-height:100vh;
-}
-
-.title{
-font-size:2.2rem;
-font-weight:700;
-margin-bottom:30px;
-letter-spacing:-.5px;
+font-family:Inter,system-ui;
+text-align:center;
+padding:40px;
 }
 
 .card{
-background:#0f172a;
-padding:35px 50px;
-border-radius:20px;
-box-shadow:0 10px 40px rgba(0,0,0,.4);
-text-align:center;
-min-width:320px;
-border:1px solid rgba(255,255,255,.05);
-transition:.3s;
-}
-
-.card:hover{
-transform:translateY(-3px);
-box-shadow:0 20px 60px rgba(0,0,0,.6);
+background:#020617;
+padding:30px;
+border-radius:16px;
+box-shadow:0 0 40px rgba(0,0,0,.5);
+margin:auto;
+max-width:700px;
+margin-bottom:30px;
 }
 
 .status{
 font-size:2rem;
-font-weight:700;
+font-weight:bold;
 margin-bottom:15px;
 }
 
-.label{
-opacity:.6;
-font-size:.85rem;
-letter-spacing:.5px;
-margin-top:18px;
+.label{opacity:.6;margin-top:15px}
+.value{font-weight:bold;margin-top:5px}
+
+.diff{
+background:#020617;
+padding:15px;
+margin-top:15px;
+border-radius:10px;
+text-align:left;
+font-family:monospace;
 }
 
-.value{
-font-size:1.1rem;
-margin-top:5px;
-font-weight:600;
-}
+.old{color:#ef4444}
+.new{color:#22c55e}
 
-.footer{
-position:absolute;
-bottom:20px;
-opacity:.4;
-font-size:.8rem;
+canvas{
+margin-top:30px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="title">ClineOps Pipeline Monitor</div>
+<h1>ClineOps Autonomous Data Guard</h1>
 
 <div class="card">
+
 <div id="status" class="status">Loading...</div>
 
 <div class="label">Runtime</div>
@@ -83,38 +68,72 @@ font-size:.8rem;
 
 <div class="label">Error</div>
 <div id="error" class="value">None</div>
+
+<div class="label">AI Suggestion</div>
+<div id="suggestion" class="value">-</div>
+
+<div class="label">Preview Output</div>
+<div id="preview" class="value">-</div>
+
+<div class="diff">
+<div class="old" id="old"></div>
+<div class="new" id="new"></div>
 </div>
 
-<div class="footer">Autonomous Data Reliability System</div>
+</div>
+
+<canvas id="chart" width="600" height="300"></canvas>
 
 <script>
+
 fetch("metrics.json?nocache="+Date.now())
 .then(r=>r.json())
-.then(d=>{
+.then(data=>{
+
+let runs=data.runs
+let latest=runs[runs.length-1]
+
 let s=document.getElementById("status")
+s.innerText=latest.status.toUpperCase()
+s.style.color=latest.status==="success"?"#22c55e":"#ef4444"
 
-s.innerText=(d.status||"UNKNOWN").toUpperCase()
+document.getElementById("runtime").innerText=latest.runtime_sec+" sec"
+document.getElementById("time").innerText=new Date(latest.timestamp*1000).toLocaleString()
+document.getElementById("error").innerText=latest.error||"None"
+document.getElementById("suggestion").innerText=latest.suggestion||"-"
+document.getElementById("preview").innerText=latest.preview??"-"
 
-if(d.status==="success")
-s.style.color="#22c55e"
-else if(d.status==="failed")
-s.style.color="#ef4444"
-else
-s.style.color="#facc15"
+document.getElementById("old").innerText=latest.old_code? "− "+latest.old_code:""
+document.getElementById("new").innerText=latest.new_code? "+ "+latest.new_code:""
 
-document.getElementById("runtime").innerText =
-d.runtime_sec ? d.runtime_sec+" sec" : "-"
 
-document.getElementById("time").innerText =
-d.timestamp ? new Date(d.timestamp*1000).toLocaleString() : "-"
+// chart
+let labels=runs.map((_,i)=>i+1)
+let values=runs.map(r=>r.status==="success"?1:0)
 
-document.getElementById("error").innerText =
-d.error || "None"
+new Chart(document.getElementById("chart"),{
+type:"line",
+data:{
+labels:labels,
+datasets:[{
+label:"Pipeline Reliability",
+data:values,
+fill:true
+}]
+},
+options:{
+scales:{
+y:{
+ticks:{
+callback:v=>v===1?"OK":"FAIL"
+}
+}
+}
+}
 })
-.catch(()=>{
-document.getElementById("status").innerText="METRICS NOT FOUND"
-document.getElementById("status").style.color="#ef4444"
+
 })
+
 </script>
 
 </body>
