@@ -1,34 +1,119 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>ClineOps Monitor</title>
+
 <style>
-body{font-family:sans-serif;text-align:center;margin-top:40px;background:#f8fafc}
-.card{display:inline-block;padding:30px;border-radius:12px;background:white;box-shadow:0 4px 20px rgba(0,0,0,.1)}
-h1{margin-bottom:10px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+
+body{
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:#e2e8f0;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
+}
+
+.title{
+font-size:2.2rem;
+font-weight:700;
+margin-bottom:30px;
+letter-spacing:-.5px;
+}
+
+.card{
+background:#0f172a;
+padding:35px 50px;
+border-radius:20px;
+box-shadow:0 10px 40px rgba(0,0,0,.4);
+text-align:center;
+min-width:320px;
+border:1px solid rgba(255,255,255,.05);
+transition:.3s;
+}
+
+.card:hover{
+transform:translateY(-3px);
+box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+
+.status{
+font-size:2rem;
+font-weight:700;
+margin-bottom:15px;
+}
+
+.label{
+opacity:.6;
+font-size:.85rem;
+letter-spacing:.5px;
+margin-top:18px;
+}
+
+.value{
+font-size:1.1rem;
+margin-top:5px;
+font-weight:600;
+}
+
+.footer{
+position:absolute;
+bottom:20px;
+opacity:.4;
+font-size:.8rem;
+}
 </style>
 </head>
+
 <body>
 
-<h1>ClineOps Self-Healing Pipeline</h1>
+<div class="title">ClineOps Pipeline Monitor</div>
 
 <div class="card">
-<h2 id="status">Loading...</h2>
-<p>Runtime: <b id="runtime"></b> sec</p>
-<p>Last Run: <b id="time"></b></p>
-<p>Error: <b id="error"></b></p>
+<div id="status" class="status">Loading...</div>
+
+<div class="label">Runtime</div>
+<div id="runtime" class="value">-</div>
+
+<div class="label">Last Execution</div>
+<div id="time" class="value">-</div>
+
+<div class="label">Error</div>
+<div id="error" class="value">None</div>
 </div>
 
+<div class="footer">Autonomous Data Reliability System</div>
+
 <script>
-fetch("metrics.json")
+fetch("metrics.json?nocache="+Date.now())
 .then(r=>r.json())
 .then(d=>{
 let s=document.getElementById("status")
-s.innerText=d.status
-s.style.color=d.status==="success"?"green":"red"
-document.getElementById("runtime").innerText=d.runtime_sec
-document.getElementById("time").innerText=new Date(d.timestamp*1000)
-document.getElementById("error").innerText=d.error ?? "None"
+
+s.innerText=(d.status||"UNKNOWN").toUpperCase()
+
+if(d.status==="success")
+s.style.color="#22c55e"
+else if(d.status==="failed")
+s.style.color="#ef4444"
+else
+s.style.color="#facc15"
+
+document.getElementById("runtime").innerText =
+d.runtime_sec ? d.runtime_sec+" sec" : "-"
+
+document.getElementById("time").innerText =
+d.timestamp ? new Date(d.timestamp*1000).toLocaleString() : "-"
+
+document.getElementById("error").innerText =
+d.error || "None"
+})
+.catch(()=>{
+document.getElementById("status").innerText="METRICS NOT FOUND"
+document.getElementById("status").style.color="#ef4444"
 })
 </script>
 
