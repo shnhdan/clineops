@@ -20,7 +20,7 @@ jobs:
       - run: pip install -r requirements.txt
 
       - name: Run pipeline
-        run: python etl/pipeline.py
+        run: python -m clineops.etl.pipeline
         continue-on-error: true
 
       - name: Run tests
