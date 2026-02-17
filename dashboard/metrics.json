@@ -29,6 +29,16 @@
       "preview": null,
       "old_code": null,
       "new_code": null
+    },
+    {
+      "status": "failed",
+      "runtime_sec": 0.0,
+      "timestamp": 1771360983.0907636,
+      "error": "'price'",
+      "suggestion": "Schema drift detected \u2014 field renamed.",
+      "preview": 100,
+      "old_code": "return data['price']",
+      "new_code": "return data.get('price') or data.get('cost')"
     }
   ]
 }
