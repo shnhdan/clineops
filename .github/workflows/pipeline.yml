@@ -1,61 +1,33 @@
 name: ClineOps Pipeline
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "*/30 * * * *"
-  workflow_dispatch:
 
 jobs:
   run:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: "3.11"
 
-      - run: pip install -r requirements.txt
+      - name: Install deps
+        run: pip install -r requirements.txt
 
       - name: Run pipeline
         run: python -m clineops.etl.pipeline
-        continue-on-error: true
 
-      - name: Run tests
-        id: tests
-        run: pytest
-        continue-on-error: true
-
-      - name: Install Cline
-        if: steps.tests.outcome == 'failure'
-        run: npm install -g @cline/cli
-
-      - name: Run Cline Repair
-        if: steps.tests.outcome == 'failure'
-        run: |
-          ERROR=$(pytest || true)
-          CODE=$(cat etl/transform.py)
-          DATA=$(python - <<EOF
-          from etl.fetch import fetch_data
-          print(fetch_data())
-          EOF
-           )
-
-                cline run cline/repair.yaml \
-                --error_log "$ERROR" \
-               --code "$CODE" \
-               --data "$DATA" \
-            > etl/transform.py
-
-      -      name: Re-run tests
-             if: steps.tests.outcome == 'failure'
-             run: pytest
       - name: Commit metrics
-  run: |
-    git config user.name github-actions
-    git config user.email actions@github.com
-    git add .
-    git commit -m "Update metrics" || echo "No changes"
-    git push
+        run: |
+          git config user.name github-actions
+          git config user.email actions@github.com
+          git add .
+          git commit -m "Update metrics" || echo "No changes"
+          git push
