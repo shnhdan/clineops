@@ -8,6 +8,8 @@ METRICS_PATH = os.path.join(BASE_DIR, "..", "dashboard", "metrics.json")
 def load_history():
     if os.path.exists(METRICS_PATH):
         with open(METRICS_PATH) as f:
+             data = json.load(f)
+                if "runs" in data:
             return json.load(f)
     return {"runs": []}
 
