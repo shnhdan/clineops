@@ -1,1 +1,14 @@
-{"runs":[]}
+{
+  "runs": [
+    {
+      "status": "failed",
+      "runtime_sec": 0.0,
+      "timestamp": 1771355933.3628,
+      "error": "'price'",
+      "suggestion": "Schema drift detected \u2014 field renamed.",
+      "preview": 100,
+      "old_code": "return data['price']",
+      "new_code": "return data.get('price') or data.get('cost')"
+    }
+  ]
+}
