@@ -4,7 +4,7 @@ from clineops.etl.transform import transform
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 METRICS_PATH = os.path.join(BASE_DIR, "etl", "metrics.json")
-DASHBOARD_PATH = os.path.join(BASE_DIR, "dashboard", "metrics.json")
+DASHBOARD_PATH = os.path.join(BASE_DIR, "..", "dashboard", "metrics.json")
 
 def run():
     start = time.time()
