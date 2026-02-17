@@ -1,6 +1,6 @@
 {
-  "status": "failed",
+  "status": "success",
   "runtime_sec": 0.0,
-  "timestamp": 1771255099.269846,
-  "error": "'price'"
+  "timestamp": 1771352713.2575226,
+  "error": null
 }
