@@ -2,59 +2,78 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ClineOps Platform Monitor</title>
+<title>ClineOps Monitor</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+
 body{
 background:linear-gradient(135deg,#0f172a,#020617);
 color:#e2e8f0;
 font-family:Inter,system-ui;
-text-align:center;
 padding:40px;
+}
+
+.container{
+display:flex;
+gap:30px;
+justify-content:center;
+flex-wrap:wrap;
 }
 
 .card{
 background:#020617;
-padding:32px;
+padding:28px;
 border-radius:18px;
-box-shadow:0 0 50px rgba(0,0,0,.6);
-margin:auto;
-max-width:720px;
-margin-bottom:35px;
-border:1px solid rgba(255,255,255,.08);
+box-shadow:0 0 40px rgba(0,0,0,.6);
+width:420px;
 }
 
 .status{
-font-size:2.2rem;
+font-size:2rem;
 font-weight:bold;
-margin-bottom:18px;
+margin-bottom:15px;
+text-align:center;
 }
 
-.label{opacity:.6;margin-top:16px}
-.value{font-weight:bold;margin-top:5px}
+.label{opacity:.6;margin-top:14px}
+.value{font-weight:bold;margin-top:4px}
 
-.diff{
+.log{
 background:#020617;
-padding:18px;
-margin-top:20px;
+padding:15px;
 border-radius:12px;
-text-align:left;
+height:320px;
+overflow:auto;
 font-family:monospace;
-border:1px solid rgba(255,255,255,.05);
 }
 
-.old{color:#ef4444}
-.new{color:#22c55e}
+.run{
+padding:8px;
+border-bottom:1px solid rgba(255,255,255,.05);
+}
 
-canvas{margin-top:35px;max-width:900px}
+.ok{color:#22c55e}
+.fail{color:#ef4444}
+
+canvas{
+margin-top:30px;
+max-width:600px;
+display:block;
+margin-left:auto;
+margin-right:auto;
+}
+
 </style>
 </head>
 
 <body>
 
-<h1>ClineOps Autonomous Reliability Engine</h1>
+<h1 style="text-align:center;">ClineOps Reliability Monitor</h1>
 
+<div class="container">
+
+<!-- MAIN STATUS -->
 <div class="card">
 
 <div id="status" class="status">Loading...</div>
@@ -74,131 +93,111 @@ canvas{margin-top:35px;max-width:900px}
 <div class="label">Preview Output</div>
 <div id="preview" class="value">-</div>
 
-<div class="diff">
-<div class="old" id="old"></div>
-<div class="new" id="new"></div>
+</div>
+
+
+<!-- HISTORY PANEL -->
+<div class="card">
+
+<h3>Run History</h3>
+<div id="history" class="log"></div>
+
 </div>
 
 </div>
+
 
 <canvas id="chart"></canvas>
 
+
 <script>
 
-fetch("metrics.json?nocache="+Date.now())
+fetch("metrics.json?"+Date.now())
 .then(r=>r.json())
 .then(data=>{
 
 if(!data.runs || data.runs.length===0){
-document.getElementById("status").innerText="NO RUNS YET"
+document.getElementById("status").innerText="NO RUNS"
 return
 }
 
 let runs=data.runs
 let latest=runs[runs.length-1]
 
-/* ---------- STATUS ---------- */
+/* STATUS */
 
-let statusEl=document.getElementById("status")
-statusEl.innerText=(latest.status||"unknown").toUpperCase()
+let ok=latest.status==="success"
 
-let success=latest.status==="success"
+let status=document.getElementById("status")
+status.innerText=latest.status.toUpperCase()
+status.style.color= ok ? "#22c55e" : "#ef4444"
 
-statusEl.style.color=success ? "#22c55e" : "#ef4444"
 
-/* ---------- SAFE VALUES ---------- */
+/* VALUES */
 
-document.getElementById("runtime").innerText =
+document.getElementById("runtime").innerText=
 latest.runtime ?? latest.runtime_sec ?? "-"
 
-document.getElementById("time").innerText =
+document.getElementById("time").innerText=
 latest.time
 ? new Date(latest.time*1000).toLocaleString()
 : latest.timestamp
 ? new Date(latest.timestamp*1000).toLocaleString()
 : "-"
 
-document.getElementById("error").innerText =
+document.getElementById("error").innerText=
 latest.error || "None"
 
-document.getElementById("suggestion").innerText =
-success
-? "No suggestions"
-: latest.suggestion || "No suggestion generated"
+document.getElementById("suggestion").innerText=
+ok ? "No suggestions" : latest.suggestion || "No suggestion"
 
-document.getElementById("preview").innerText =
+document.getElementById("preview").innerText=
 latest.preview ?? "-"
 
-document.getElementById("old").innerText =
-latest.old_code ? "− "+latest.old_code : ""
 
-document.getElementById("new").innerText =
-latest.new_code ? "+ "+latest.new_code : ""
+/* HISTORY PANEL */
+
+let box=document.getElementById("history")
+
+runs.slice().reverse().forEach((r,i)=>{
+let div=document.createElement("div")
+div.className="run "+(r.status==="success"?"ok":"fail")
+
+let t=r.time || r.timestamp
+
+div.innerText=
+"Run "+(runs.length-i)+" → "
++(r.status==="success"?"SUCCESS":"FAIL")
++" | "+new Date(t*1000).toLocaleTimeString()
+
+box.appendChild(div)
+})
 
 
-/* ---------- GRAPH ---------- */
+/* CURRENT RUN GRAPH */
 
 const ctx=document.getElementById("chart").getContext("2d")
 
-const values=runs.map(r=>r.status==="success"?1:0)
-
-const hasFailure=values.includes(0)
-
-const gradient=ctx.createLinearGradient(0,0,0,300)
-
-if(hasFailure){
-gradient.addColorStop(0,"#ef4444")
-gradient.addColorStop(1,"rgba(239,68,68,0)")
-}else{
-gradient.addColorStop(0,"#22c55e")
-gradient.addColorStop(1,"rgba(34,197,94,0)")
-}
+let color= ok ? "#22c55e" : "#ef4444"
 
 new Chart(ctx,{
-type:"line",
+type:"bar",
 data:{
-labels:runs.map((_,i)=>"Run "+(i+1)),
+labels:["Current Run"],
 datasets:[{
-label:"Pipeline Health",
-data:values,
-borderColor:gradient,
-backgroundColor:gradient,
-fill:true,
-tension:.35,
-borderWidth:4,
-pointRadius:6,
-pointHoverRadius:9
+data:[1],
+backgroundColor:color
 }]
 },
 options:{
-responsive:true,
-plugins:{
-legend:{
-labels:{color:"#e2e8f0"}
-}
-},
+plugins:{legend:{display:false}},
 scales:{
-x:{
-ticks:{color:"#94a3b8"},
-grid:{color:"rgba(148,163,184,.15)"}
-},
-y:{
-min:0,
-max:1,
-ticks:{
-color:"#94a3b8",
-callback:v=>v===1?"SUCCESS":"FAIL"
-},
-grid:{color:"rgba(148,163,184,.15)"}
-}
+y:{display:false},
+x:{ticks:{color:"#e2e8f0"}}
 }
 }
 })
 
-})
-.catch(()=>{
-document.getElementById("status").innerText="LOAD ERROR"
-document.getElementById("status").style.color="#ef4444"
 })
 
 </script>
