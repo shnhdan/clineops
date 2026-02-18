@@ -11,14 +11,24 @@ body{
 background:linear-gradient(135deg,#0f172a,#020617);
 color:#e2e8f0;
 font-family:Inter,system-ui;
+margin:0;
 padding:40px;
 }
 
-.container{
+.wrapper{
 display:flex;
 gap:30px;
-justify-content:center;
-flex-wrap:wrap;
+max-width:1300px;
+margin:auto;
+align-items:flex-start;
+}
+
+.main{
+flex:2;
+}
+
+.side{
+flex:1;
 }
 
 .card{
@@ -26,30 +36,27 @@ background:#020617;
 padding:28px;
 border-radius:18px;
 box-shadow:0 0 40px rgba(0,0,0,.6);
-width:420px;
+margin-bottom:25px;
 }
 
 .status{
 font-size:2rem;
 font-weight:bold;
-margin-bottom:15px;
 text-align:center;
+margin-bottom:18px;
 }
 
 .label{opacity:.6;margin-top:14px}
 .value{font-weight:bold;margin-top:4px}
 
 .log{
-background:#020617;
-padding:15px;
-border-radius:12px;
-height:320px;
+height:500px;
 overflow:auto;
 font-family:monospace;
 }
 
 .run{
-padding:8px;
+padding:10px;
 border-bottom:1px solid rgba(255,255,255,.05);
 }
 
@@ -57,11 +64,7 @@ border-bottom:1px solid rgba(255,255,255,.05);
 .fail{color:#ef4444}
 
 canvas{
-margin-top:30px;
-max-width:600px;
-display:block;
-margin-left:auto;
-margin-right:auto;
+margin-top:25px;
 }
 
 </style>
@@ -69,11 +72,15 @@ margin-right:auto;
 
 <body>
 
-<h1 style="text-align:center;">ClineOps Reliability Monitor</h1>
+<h1 style="text-align:center;margin-bottom:30px">
+ClineOps Autonomous Reliability Engine
+</h1>
 
-<div class="container">
+<div class="wrapper">
 
-<!-- MAIN STATUS -->
+<!-- LEFT MAIN PANEL -->
+<div class="main">
+
 <div class="card">
 
 <div id="status" class="status">Loading...</div>
@@ -95,19 +102,24 @@ margin-right:auto;
 
 </div>
 
-
-<!-- HISTORY PANEL -->
 <div class="card">
+<canvas id="chart"></canvas>
+</div>
 
+</div>
+
+
+<!-- RIGHT SIDE HISTORY -->
+<div class="side">
+
+<div class="card">
 <h3>Run History</h3>
 <div id="history" class="log"></div>
-
 </div>
 
 </div>
 
-
-<canvas id="chart"></canvas>
+</div>
 
 
 <script>
@@ -123,14 +135,13 @@ return
 
 let runs=data.runs
 let latest=runs[runs.length-1]
+let success=latest.status==="success"
 
 /* STATUS */
 
-let ok=latest.status==="success"
-
 let status=document.getElementById("status")
-status.innerText=latest.status.toUpperCase()
-status.style.color= ok ? "#22c55e" : "#ef4444"
+status.innerText=(latest.status||"unknown").toUpperCase()
+status.style.color= success ? "#22c55e" : "#ef4444"
 
 
 /* VALUES */
@@ -149,7 +160,7 @@ document.getElementById("error").innerText=
 latest.error || "None"
 
 document.getElementById("suggestion").innerText=
-ok ? "No suggestions" : latest.suggestion || "No suggestion"
+success ? "No suggestions" : latest.suggestion || "No suggestion"
 
 document.getElementById("preview").innerText=
 latest.preview ?? "-"
@@ -166,34 +177,61 @@ div.className="run "+(r.status==="success"?"ok":"fail")
 let t=r.time || r.timestamp
 
 div.innerText=
-"Run "+(runs.length-i)+" → "
-+(r.status==="success"?"SUCCESS":"FAIL")
-+" | "+new Date(t*1000).toLocaleTimeString()
+"Run "+(runs.length-i)+
+"  |  "+(r.status==="success"?"SUCCESS":"FAIL")+
+"  |  "+new Date(t*1000).toLocaleTimeString()
 
 box.appendChild(div)
 })
 
 
-/* CURRENT RUN GRAPH */
+/* GRAPH */
 
 const ctx=document.getElementById("chart").getContext("2d")
 
-let color= ok ? "#22c55e" : "#ef4444"
+let values=runs.map(r=>r.status==="success"?1:0)
+
+let gradient=ctx.createLinearGradient(0,0,0,300)
+
+if(success){
+gradient.addColorStop(0,"#22c55e")
+gradient.addColorStop(1,"rgba(34,197,94,0)")
+}else{
+gradient.addColorStop(0,"#ef4444")
+gradient.addColorStop(1,"rgba(239,68,68,0)")
+}
 
 new Chart(ctx,{
-type:"bar",
+type:"line",
 data:{
-labels:["Current Run"],
+labels:runs.map((_,i)=>"Run "+(i+1)),
 datasets:[{
-data:[1],
-backgroundColor:color
+label:"Pipeline Reliability",
+data:values,
+borderColor:gradient,
+backgroundColor:gradient,
+fill:true,
+tension:.35,
+borderWidth:4,
+pointRadius:7,
+pointBackgroundColor:values.map((v,i)=>
+i===values.length-1
+? "#facc15"
+: (v? "#22c55e":"#ef4444")
+)
 }]
 },
 options:{
-plugins:{legend:{display:false}},
+plugins:{
+legend:{labels:{color:"#e2e8f0"}}
+},
 scales:{
-y:{display:false},
-x:{ticks:{color:"#e2e8f0"}}
+x:{ticks:{color:"#94a3b8"},grid:{color:"rgba(148,163,184,.15)"}},
+y:{
+min:0,max:1,
+ticks:{color:"#94a3b8",callback:v=>v?"SUCCESS":"FAIL"},
+grid:{color:"rgba(148,163,184,.15)"}
+}
 }
 }
 })
