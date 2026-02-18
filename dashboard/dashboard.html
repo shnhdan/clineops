@@ -2,8 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ClineOps Monitor</title>
-
+<title>ClineOps Platform Monitor</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -23,33 +22,17 @@ box-shadow:0 0 50px rgba(0,0,0,.6);
 margin:auto;
 max-width:720px;
 margin-bottom:35px;
-border:1px solid rgba(34,197,94,.2);
-transition:.3s;
-}
-
-.card:hover{
-transform:translateY(-4px);
-box-shadow:0 0 70px rgba(0,0,0,.8);
+border:1px solid rgba(255,255,255,.08);
 }
 
 .status{
 font-size:2.2rem;
 font-weight:bold;
 margin-bottom:18px;
-letter-spacing:.5px;
 }
 
-.label{
-opacity:.65;
-margin-top:16px;
-font-size:.9rem;
-}
-
-.value{
-font-weight:bold;
-margin-top:6px;
-font-size:1.05rem;
-}
+.label{opacity:.6;margin-top:16px}
+.value{font-weight:bold;margin-top:5px}
 
 .diff{
 background:#020617;
@@ -64,16 +47,13 @@ border:1px solid rgba(255,255,255,.05);
 .old{color:#ef4444}
 .new{color:#22c55e}
 
-canvas{
-margin-top:35px;
-max-width:900px;
-}
+canvas{margin-top:35px;max-width:900px}
 </style>
 </head>
 
 <body>
 
-<h1>ClineOps Autonomous Data Guard</h1>
+<h1>ClineOps Autonomous Reliability Engine</h1>
 
 <div class="card">
 
@@ -86,7 +66,7 @@ max-width:900px;
 <div id="time" class="value">-</div>
 
 <div class="label">Error</div>
-<div id="error" class="value">None</div>
+<div id="error" class="value">-</div>
 
 <div class="label">AI Suggestion</div>
 <div id="suggestion" class="value">-</div>
@@ -110,50 +90,77 @@ fetch("metrics.json?nocache="+Date.now())
 .then(data=>{
 
 if(!data.runs || data.runs.length===0){
-document.getElementById("status").innerText="NO DATA"
+document.getElementById("status").innerText="NO RUNS YET"
 return
 }
 
 let runs=data.runs
 let latest=runs[runs.length-1]
 
-// status
-let s=document.getElementById("status")
-s.innerText=(latest.status||"unknown").toUpperCase()
-s.style.color=latest.status==="success"?"#22c55e":"#ef4444"
+/* ---------- STATUS ---------- */
 
-// text fields
-document.getElementById("runtime").innerText=
-latest.runtime_sec? latest.runtime_sec+" sec":"-"
+let statusEl=document.getElementById("status")
+statusEl.innerText=(latest.status||"unknown").toUpperCase()
 
-document.getElementById("time").innerText=
-latest.timestamp? new Date(latest.timestamp*1000).toLocaleString():"-"
+let success=latest.status==="success"
 
-document.getElementById("error").innerText=latest.error||"None"
-document.getElementById("suggestion").innerText=latest.suggestion||"-"
-document.getElementById("preview").innerText=latest.preview??"-"
+statusEl.style.color=success ? "#22c55e" : "#ef4444"
 
-document.getElementById("old").innerText=
-latest.old_code? "− "+latest.old_code:""
+/* ---------- SAFE VALUES ---------- */
 
-document.getElementById("new").innerText=
-latest.new_code? "+ "+latest.new_code:""
+document.getElementById("runtime").innerText =
+latest.runtime ?? latest.runtime_sec ?? "-"
+
+document.getElementById("time").innerText =
+latest.time
+? new Date(latest.time*1000).toLocaleString()
+: latest.timestamp
+? new Date(latest.timestamp*1000).toLocaleString()
+: "-"
+
+document.getElementById("error").innerText =
+latest.error || "None"
+
+document.getElementById("suggestion").innerText =
+success
+? "No suggestions"
+: latest.suggestion || "No suggestion generated"
+
+document.getElementById("preview").innerText =
+latest.preview ?? "-"
+
+document.getElementById("old").innerText =
+latest.old_code ? "− "+latest.old_code : ""
+
+document.getElementById("new").innerText =
+latest.new_code ? "+ "+latest.new_code : ""
 
 
-// graph
+/* ---------- GRAPH ---------- */
+
 const ctx=document.getElementById("chart").getContext("2d")
 
+const values=runs.map(r=>r.status==="success"?1:0)
+
+const hasFailure=values.includes(0)
+
 const gradient=ctx.createLinearGradient(0,0,0,300)
+
+if(hasFailure){
+gradient.addColorStop(0,"#ef4444")
+gradient.addColorStop(1,"rgba(239,68,68,0)")
+}else{
 gradient.addColorStop(0,"#22c55e")
 gradient.addColorStop(1,"rgba(34,197,94,0)")
+}
 
 new Chart(ctx,{
 type:"line",
 data:{
 labels:runs.map((_,i)=>"Run "+(i+1)),
 datasets:[{
-label:"Pipeline Reliability",
-data:runs.map(r=>r.status==="success"?1:0),
+label:"Pipeline Health",
+data:values,
 borderColor:gradient,
 backgroundColor:gradient,
 fill:true,
@@ -167,10 +174,7 @@ options:{
 responsive:true,
 plugins:{
 legend:{
-labels:{
-color:"#e2e8f0",
-font:{size:14}
-}
+labels:{color:"#e2e8f0"}
 }
 },
 scales:{
