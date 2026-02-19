@@ -71,7 +71,13 @@
       "fix": "return data.get('price') or data.get('cost')",
       "confidence": 0.91,
       "preview": 100
+    },
+    {
+      "status": "success",
+      "runtime": 0.0,
+      "time": 1771500837.4452956,
+      "error": null
     }
   ],
-  "score": 70
+  "score": 73
 }
