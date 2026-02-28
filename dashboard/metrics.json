@@ -1,16 +1,6 @@
 {
   "runs": [
     {
-      "status": "failed",
-      "runtime": 0.0,
-      "time": 1772202980.0009012,
-      "error": "'price'",
-      "suggestion": "Schema drift detected \u2014 field renamed",
-      "fix": "return data.get('price') or data.get('cost')",
-      "confidence": 0.91,
-      "preview": 100
-    },
-    {
       "status": "success",
       "runtime": 0.0,
       "time": 1772206367.3031516,
@@ -171,7 +161,13 @@
       "runtime": 0.0,
       "time": 1772258182.3576605,
       "error": null
+    },
+    {
+      "status": "success",
+      "runtime": 0.0,
+      "time": 1772260427.8731387,
+      "error": null
     }
   ],
-  "score": 35
+  "score": 40
 }
