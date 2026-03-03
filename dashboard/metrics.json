@@ -3,16 +3,6 @@
     {
       "status": "failed",
       "runtime": 0.0,
-      "time": 1772451058.1449263,
-      "error": "'price'",
-      "suggestion": "Schema drift detected \u2014 field renamed",
-      "fix": "return data.get('price') or data.get('cost')",
-      "confidence": 0.91,
-      "preview": 100
-    },
-    {
-      "status": "failed",
-      "runtime": 0.0,
       "time": 1772455289.3945134,
       "error": "'price'",
       "suggestion": "Schema drift detected \u2014 field renamed",
@@ -155,7 +145,13 @@
       "runtime": 0.0,
       "time": 1772518046.2062414,
       "error": null
+    },
+    {
+      "status": "success",
+      "runtime": 0.0,
+      "time": 1772522044.0018897,
+      "error": null
     }
   ],
-  "score": 55
+  "score": 60
 }
