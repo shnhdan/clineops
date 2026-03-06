@@ -1,12 +1,6 @@
 {
   "runs": [
     {
-      "status": "success",
-      "runtime": 0.0,
-      "time": 1772694843.264676,
-      "error": null
-    },
-    {
       "status": "failed",
       "runtime": 0.0,
       "time": 1772697554.5461822,
@@ -155,6 +149,12 @@
       "fix": "return data.get('price') or data.get('cost')",
       "confidence": 0.91,
       "preview": 100
+    },
+    {
+      "status": "success",
+      "runtime": 0.0,
+      "time": 1772773610.0202765,
+      "error": null
     }
   ],
   "score": 55
