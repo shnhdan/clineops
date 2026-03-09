@@ -1,29 +1,20 @@
 name: ClineOps Pipeline
-
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "*/30 * * * *"
-
 jobs:
   run:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install deps
         run: pip install -r requirements.txt
-
       - name: Run pipeline
         run: python -m clineops.etl.pipeline
-
       - name: Commit metrics
         run: |
           git config user.name github-actions
